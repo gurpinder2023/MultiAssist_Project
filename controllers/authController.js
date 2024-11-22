@@ -176,6 +176,29 @@ exports.resetPassword = async (req, res) => {
 };
 
 exports.deleteProfile = async (req, res) => {
-    const email = req.userEmail;
-    // Logic for deleting user profile
+    const email = req.userEmail; // Extract email from the token
+
+    try {
+        
+        // Delete the user's record from the database
+        const deleteParams = {
+            TableName: 'authentication',
+            Key: { email },
+        };
+
+        await dynamoDB.send(new DeleteCommand(deleteParams));
+
+        // Optionally, delete the user's request stats
+        const deleteStatsParams = {
+            TableName: 'UserRequests',
+            Key: { email },
+        };
+
+        await dynamoDB.send(new DeleteCommand(deleteStatsParams));
+
+        res.json({ message: messages.success.profileDeleted });
+    } catch (error) {
+        console.error('Error deleting profile:', error);
+        res.status(500).json({ error: messages.errors.deleteProfileError });
+    }
 };
